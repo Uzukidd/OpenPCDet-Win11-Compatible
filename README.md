@@ -16,18 +16,51 @@ Official README.md see here: [README_aux.md](README_aux.md)
 - IoU3d_nms modified
 - Dependency Sharedarray removed
 
-## Environment
+## Environment tested
 
-- Windows 11
-- CUDA-dev 11.4
-- cudatoolkit 11.3
-- Anaconda2
-- Python 3.8.16
-- Pytorch 1.10.1
-- spconv-cu113 2.3.6
-- NVIDIA GeForce RTX 3060 Laptop GPU
+- CUDA 11.4 + Py3.8 + VS2019 + Pytorch1.10
+
+  - Windows 11
+
+  - NVCC 11.4
+
+  - Visual Studio 2019
+
+  - Cudatoolkit 11.3
+
+  - Anaconda 3
+
+  - Python 3.8.16
+
+  - Pytorch 1.10.1
+
+  - spconv-cu113 2.3.6
+
+  - NVIDIA GeForce RTX 3060 Laptop GPU
+
+- CUDA 11.8 + Py3.10 + VS2022 + Pytorch2.0
+
+  - Windows 11
+
+  - NVCC 11.8
+
+  - Visual Studio 2022
+
+  - Cudatoolkit 11.8
+
+  - Anaconda 3
+
+  - Python 3.10.11
+
+  - Pytorch 2.0.0
+
+  - spconv-cu118 2.3.6
+
+  - NVIDIA GeForce RTX 3060 Laptop GPU
 
 ## Changelog
+
+[2023-05-1] Mayday united together
 
 [2023-05-1] Dataset shared memory modified.
 
@@ -42,7 +75,7 @@ Official README.md see here: [README_aux.md](README_aux.md)
 
 ## How to use it
 
-a. Install and configure CUDA 11.4 properly from https://anaconda.org/conda-forge/cudatoolkit-dev/files
+a. Install and configure CUDA 11.4 or CUDA 11.8 properly from https://anaconda.org/conda-forge/cudatoolkit-dev/files
 
 b. Clone this repository.
 
@@ -53,7 +86,7 @@ git clone https://github.com/Uzukidd/OpenPCDet-Win11-Compatible.git
 c. Create the environment as follows:
 
 ```shell
-conda env create -f environment.yml
+conda env create -f environment_cu114.yml (or environment_cu118.yml)
 ```
 
 c. Install this `pcdet` library and its dependent libraries by running the following command:
