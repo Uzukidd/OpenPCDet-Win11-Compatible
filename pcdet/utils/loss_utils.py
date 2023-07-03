@@ -64,11 +64,11 @@ class SigmoidFocalClassificationLoss(nn.Module):
 
         loss = focal_weight * bce_loss
 
-        if weights.shape.__len__() == 2 or \
-                (weights.shape.__len__() == 1 and target.shape.__len__() == 2):
+        if len(weights.shape) == 2 or \
+                (len(weights.shape) == 1 and len(target.shape) == 2):
             weights = weights.unsqueeze(-1)
 
-        assert weights.shape.__len__() == loss.shape.__len__()
+        assert len(weights.shape) == len(loss.shape)
 
         return loss * weights
 
@@ -98,7 +98,7 @@ class WeightedSmoothL1Loss(nn.Module):
             self.code_weights = torch.from_numpy(self.code_weights).cuda()
 
     @staticmethod
-    def smooth_l1_loss(diff, beta):
+    def smooth_l1_loss(diff, beta:float):
         if beta < 1e-5:
             loss = torch.abs(diff)
         else:

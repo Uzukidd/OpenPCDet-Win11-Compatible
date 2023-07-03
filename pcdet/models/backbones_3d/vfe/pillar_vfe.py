@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+from typing import Dict
 from .vfe_template import VFETemplate
 
 
@@ -35,9 +35,9 @@ class PFNLayer(nn.Module):
             x = torch.cat(part_linear_out, dim=0)
         else:
             x = self.linear(inputs)
-        torch.backends.cudnn.enabled = False
+        # torch.backends.cudnn.enabled = False
         x = self.norm(x.permute(0, 2, 1)).permute(0, 2, 1) if self.use_norm else x
-        torch.backends.cudnn.enabled = True
+        # torch.backends.cudnn.enabled = True
         x = F.relu(x)
         x_max = torch.max(x, dim=1, keepdim=True)[0]
 
@@ -83,7 +83,7 @@ class PillarVFE(VFETemplate):
     def get_output_feature_dim(self):
         return self.num_filters[-1]
 
-    def get_paddings_indicator(self, actual_num, max_num, axis=0):
+    def get_paddings_indicator(self, actual_num, max_num:int, axis:int=0):
         actual_num = torch.unsqueeze(actual_num, axis + 1)
         max_num_shape = [1] * len(actual_num.shape)
         max_num_shape[axis + 1] = -1
@@ -91,7 +91,7 @@ class PillarVFE(VFETemplate):
         paddings_indicator = actual_num.int() > max_num
         return paddings_indicator
 
-    def forward(self, batch_dict, **kwargs):
+    def forward(self, batch_dict:Dict[str, torch.Tensor]):
   
         voxel_features, voxel_num_points, coords = batch_dict['voxels'], batch_dict['voxel_num_points'], batch_dict['voxel_coords']
         points_mean = voxel_features[:, :, :3].sum(dim=1, keepdim=True) / voxel_num_points.type_as(voxel_features).view(-1, 1, 1)

@@ -55,7 +55,7 @@ class PointHeadSimple(PointHeadTemplate):
         tb_dict.update(tb_dict_1)
         return point_loss, tb_dict
 
-    def forward(self, batch_dict):
+    def forward(self, batch_dict:dict[str, torch.Tensor]):
         """
         Args:
             batch_dict:

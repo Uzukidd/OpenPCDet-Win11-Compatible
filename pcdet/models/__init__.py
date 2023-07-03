@@ -23,9 +23,10 @@ def build_network(model_cfg, num_class, dataset):
 def load_data_to_gpu(batch_dict):
     for key, val in batch_dict.items():
         if not isinstance(val, np.ndarray):
+            batch_dict[key] = torch.from_numpy(np.array([val])).cuda()
             continue
         elif key in ['frame_id', 'metadata', 'calib']:
-            continue
+            batch_dict[key] = torch.from_numpy(val).cuda()
         elif key in ['images']:
             batch_dict[key] = kornia.image_to_tensor(val).float().cuda().contiguous()
         elif key in ['image_shape']:

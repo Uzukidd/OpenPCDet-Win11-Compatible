@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.nn as nn
 
 from .anchor_head_template import AnchorHeadTemplate
@@ -38,7 +39,7 @@ class AnchorHeadSingle(AnchorHeadTemplate):
         nn.init.constant_(self.conv_cls.bias, -np.log((1 - pi) / pi))
         nn.init.normal_(self.conv_box.weight, mean=0, std=0.001)
 
-    def forward(self, data_dict):
+    def forward(self, data_dict:dict[str, torch.Tensor]):
         spatial_features_2d = data_dict['spatial_features_2d']
 
         cls_preds = self.conv_cls(spatial_features_2d)

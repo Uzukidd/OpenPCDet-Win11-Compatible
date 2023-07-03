@@ -1,11 +1,12 @@
 import numpy as np
 import torch
+import torch.nn as nn
 
 from ....ops.iou3d_nms import iou3d_nms_utils
 from ....utils import box_utils
 
 
-class AxisAlignedTargetAssigner(object):
+class AxisAlignedTargetAssigner(nn.Module):
     def __init__(self, model_cfg, class_names, box_coder, match_height=False):
         super().__init__()
 
@@ -13,7 +14,7 @@ class AxisAlignedTargetAssigner(object):
         anchor_target_cfg = model_cfg.TARGET_ASSIGNER_CONFIG
         self.box_coder = box_coder
         self.match_height = match_height
-        self.class_names = np.array(class_names)
+        self.class_names = class_names
         self.anchor_class_names = [config['class_name'] for config in anchor_generator_cfg]
         self.pos_fraction = anchor_target_cfg.POS_FRACTION if anchor_target_cfg.POS_FRACTION >= 0 else None
         self.sample_size = anchor_target_cfg.SAMPLE_SIZE
@@ -51,7 +52,7 @@ class AxisAlignedTargetAssigner(object):
         gt_boxes = gt_boxes_with_classes[:, :, :-1]
         for k in range(batch_size):
             cur_gt = gt_boxes[k]
-            cnt = cur_gt.__len__() - 1
+            cnt = len(cur_gt) - 1
             while cnt > 0 and cur_gt[cnt].sum() == 0:
                 cnt -= 1
             cur_gt = cur_gt[:cnt + 1]
@@ -60,7 +61,7 @@ class AxisAlignedTargetAssigner(object):
             target_list = []
             for anchor_class_name, anchors in zip(self.anchor_class_names, all_anchors):
                 if cur_gt_classes.shape[0] > 1:
-                    mask = torch.from_numpy(self.class_names[cur_gt_classes.cpu() - 1] == anchor_class_name)
+                    mask = torch.tensor(self.class_names[cur_gt_classes.cpu() - 1] == anchor_class_name)
                 else:
                     mask = torch.tensor([self.class_names[c - 1] == anchor_class_name
                                          for c in cur_gt_classes], dtype=torch.bool)

@@ -14,6 +14,19 @@ except:
 import numpy as np
 import torch
 
+import pickle
+
+# def script_method(fn, _rcb=None):
+#     return fn
+# def script(obj, optimize=True, _frames_up=0, _rcb=None):
+#     return obj
+# import torch.jit
+# script_method1 = torch.jit.script_method
+# script1 = torch.jit.script
+# torch.jit.script_method = script_method
+# torch.jit.script = script
+
+
 from pcdet.config import cfg, cfg_from_yaml_file
 from pcdet.datasets import DatasetTemplate
 from pcdet.models import build_network, load_data_to_gpu
@@ -88,19 +101,29 @@ def main():
 
     model = build_network(model_cfg=cfg.MODEL, num_class=len(cfg.CLASS_NAMES), dataset=demo_dataset)
     model.load_params_from_file(filename=args.ckpt, logger=logger, to_cpu=True)
+    # model = torch.jit.load("./torch_scripts/point_pillar_model.pt")
     model.cuda()
     model.eval()
+    # print(model)
     with torch.no_grad():
         for idx, data_dict in enumerate(demo_dataset):
             logger.info(f'Visualized sample index: \t{idx + 1}')
             data_dict = demo_dataset.collate_batch([data_dict])
             load_data_to_gpu(data_dict)
-            pred_dicts, _ = model.forward(data_dict)
+            # pred_dicts, _ = model.forward(data_dict)
+            # print(len(pred_dicts['pred_boxes']))
+            # print(pred_dicts)
+            logger.info('Start converting to script')
+            script_module = torch.jit.script(model, data_dict)
+            # print(script_module.graph)
+            script_module.save("./torch_scripts/point_pillar_model.pt")
+            
+            
 
-            V.draw_scenes(
-                points=data_dict['points'][:, 1:], ref_boxes=pred_dicts[0]['pred_boxes'],
-                ref_scores=pred_dicts[0]['pred_scores'], ref_labels=pred_dicts[0]['pred_labels']
-            )
+            # V.draw_scenes(
+            #     points=data_dict['points'][:, 1:], ref_boxes=pred_dicts['pred_boxes'],
+            #     ref_scores=pred_dicts['pred_scores'], ref_labels=pred_dicts['pred_labels']
+            # )
 
             if not OPEN3D_FLAG:
                 mlab.show(stop=True)

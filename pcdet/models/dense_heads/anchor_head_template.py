@@ -31,7 +31,7 @@ class AnchorHeadTemplate(nn.Module):
         self.anchors = [x.cuda() for x in anchors]
         self.target_assigner = self.get_target_assigner(anchor_target_cfg)
 
-        self.forward_ret_dict = {}
+        self.forward_ret_dict = {"redundant" : torch.zeros((1)).cuda()}
         self.build_losses(self.model_cfg.LOSS_CONFIG)
 
     @staticmethod
