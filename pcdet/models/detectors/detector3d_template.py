@@ -254,6 +254,16 @@ class Detector3DTemplate(nn.Module):
                     label_preds = batch_dict[label_key][index]
                 else:
                     label_preds = label_preds + 1 
+                    
+                if hasattr(post_process_cfg.NMS_CONFIG, "IS_FOR_TRACE") and post_process_cfg.NMS_CONFIG.IS_FOR_TRACE:
+                    record_dict = {
+                        'pred_boxes': box_preds,
+                        'pred_scores': cls_preds,
+                        'pred_labels': label_preds
+                    }
+                    pred_dicts.append(record_dict)
+                    continue
+                
                 selected, selected_scores = model_nms_utils.class_agnostic_nms(
                     box_scores=cls_preds, box_preds=box_preds,
                     nms_config=post_process_cfg.NMS_CONFIG,

@@ -135,6 +135,7 @@ MODEL:
         EVAL_METRIC: kitti
 
         NMS_CONFIG:
+            IS_FOR_TRACE: True
             MULTI_CLASSES_NMS: False
             NMS_TYPE: nms_gpu
             NMS_THRESH: 0.01

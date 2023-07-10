@@ -2,13 +2,14 @@ from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
+import torch
 import torch.utils.data as torch_data
 
 from ..utils import common_utils
 from .augmentor.data_augmentor import DataAugmentor
 from .processor.data_processor import DataProcessor
 from .processor.point_feature_encoder import PointFeatureEncoder
-
+from typing import Dict
 
 class DatasetTemplate(torch_data.Dataset):
     def __init__(self, dataset_cfg=None, class_names=None, training=True, root_path=None, logger=None):
@@ -130,7 +131,7 @@ class DatasetTemplate(torch_data.Dataset):
         """
         raise NotImplementedError
 
-    def prepare_data(self, data_dict):
+    def prepare_data(self, data_dict:Dict[str, torch.Tensor]):
         """
         Args:
             data_dict:

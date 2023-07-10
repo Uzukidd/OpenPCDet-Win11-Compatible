@@ -1,6 +1,7 @@
 import argparse
 import glob
 from pathlib import Path
+from typing import Dict
 
 try:
     import open3d
@@ -55,6 +56,15 @@ class DemoDataset(DatasetTemplate):
 
     def __len__(self):
         return len(self.sample_file_list)
+    
+    # def prepare_data(self, data_dict: Dict[str, torch.Tensor]):
+    #     res = super().prepare_data(data_dict)
+    #     for key, val in res.items():
+    #         if isinstance(val, np.ndarray):
+    #             res[key] = torch.from_numpy(val)
+    #         if isinstance(val, bool):
+    #             res[key] = torch.tensor(val)
+    #     return res
 
     def __getitem__(self, index):
         if self.ext == '.bin':
@@ -65,10 +75,14 @@ class DemoDataset(DatasetTemplate):
             raise NotImplementedError
 
         input_dict = {
-            'points': points,
-            'frame_id': index,
+            'points': torch.from_numpy(points),
+            # 'frame_id': index,
         }
 
+        
+        script_module = torch.jit.trace(self.prepare_data, input_dict, strict=False)
+        script_module.save("./torch_scripts/data_encoder.pt")
+        
         data_dict = self.prepare_data(data_dict=input_dict)
         return data_dict
 
@@ -110,13 +124,14 @@ def main():
             logger.info(f'Visualized sample index: \t{idx + 1}')
             data_dict = demo_dataset.collate_batch([data_dict])
             load_data_to_gpu(data_dict)
+            # torch.save(data_dict, "./test_dataset_000000.pth")
             # pred_dicts, _ = model.forward(data_dict)
             # print(len(pred_dicts['pred_boxes']))
             # print(pred_dicts)
-            logger.info('Start converting to script')
-            script_module = torch.jit.script(model, data_dict)
+            # logger.info('Start converting to script')
+            # script_module = torch.jit.trace(model, data_dict, strict=False)
             # print(script_module.graph)
-            script_module.save("./torch_scripts/point_pillar_model.pt")
+            # script_module.save("./torch_scripts/point_pillar_model.pt")
             
             
 
