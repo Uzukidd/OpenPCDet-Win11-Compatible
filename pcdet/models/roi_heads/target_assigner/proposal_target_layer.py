@@ -80,7 +80,8 @@ class ProposalTargetLayer(nn.Module):
         gt_boxes = batch_dict['gt_boxes']
 
         code_size = rois.shape[-1]
-        batch_rois = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE, code_size)
+        # batch_rois = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE, code_size)
+        batch_rois = []
         batch_gt_of_rois = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE, code_size + 1)
         batch_roi_ious = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE)
         batch_roi_scores = rois.new_zeros(batch_size, self.roi_sampler_cfg.ROI_PER_IMAGE)
@@ -106,11 +107,14 @@ class ProposalTargetLayer(nn.Module):
 
             sampled_inds = self.subsample_rois(max_overlaps=max_overlaps)
 
-            batch_rois[index] = cur_roi[sampled_inds]
+            # batch_rois[index] = cur_roi[sampled_inds]
+            batch_rois.append(cur_roi[sampled_inds])
             batch_roi_labels[index] = cur_roi_labels[sampled_inds]
             batch_roi_ious[index] = max_overlaps[sampled_inds]
             batch_roi_scores[index] = cur_roi_scores[sampled_inds]
             batch_gt_of_rois[index] = cur_gt[gt_assignment[sampled_inds]]
+            
+        batch_rois = torch.stack(batch_rois)
 
         return batch_rois, batch_gt_of_rois, batch_roi_ious, batch_roi_scores, batch_roi_labels
 

@@ -1,9 +1,29 @@
 from functools import partial
-
+from torch.autograd import Function
 import torch.nn as nn
 
 from ...utils.spconv_utils import replace_feature, spconv
 
+class SparseGradientHook(Function):
+    @staticmethod
+    def forward(ctx,
+                input_sparseConvTensor:spconv.SparseConvTensor,):
+        featuers = input_sparseConvTensor.features
+        ctx.save_for_backward(featuers)
+        print(featuers.size())
+        return input_sparseConvTensor
+
+    @staticmethod
+    def backward(ctx, 
+                 input_bp, 
+                 filters_bp,):
+        features = ctx.saved_tensors
+        print(features.size())
+        print(input_bp.size())
+        return input_bp, filters_bp
+
+
+sparse_gradient_hook = SparseGradientHook.apply
 
 def post_act_block(in_channels, out_channels, kernel_size, indice_key=None, stride=1, padding=0,
                    conv_type='subm', norm_fn=None):
@@ -145,7 +165,6 @@ class VoxelBackBone8x(nn.Module):
             spatial_shape=self.sparse_shape,
             batch_size=batch_size
         )
-
         x = self.conv_input(input_sp_tensor)
 
         x_conv1 = self.conv1(x)

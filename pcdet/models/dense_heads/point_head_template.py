@@ -14,6 +14,11 @@ class PointHeadTemplate(nn.Module):
 
         self.build_losses(self.model_cfg.LOSS_CONFIG)
         self.forward_ret_dict = None
+        
+        self.pseudo_training = False
+        
+    def pseudo_train(self, mode:bool = True):
+        self.pseudo_training = mode
 
     def build_losses(self, losses_cfg):
         self.add_module(

@@ -19,6 +19,11 @@ class RoIHeadTemplate(nn.Module):
         self.proposal_target_layer = ProposalTargetLayer(roi_sampler_cfg=self.model_cfg.TARGET_CONFIG)
         self.build_losses(self.model_cfg.LOSS_CONFIG)
         self.forward_ret_dict = None
+        
+        self.pseudo_training = False
+        
+    def pseudo_train(self, mode:bool = True):
+        self.pseudo_training = mode
 
     def build_losses(self, losses_cfg):
         self.add_module(
@@ -42,7 +47,7 @@ class RoIHeadTemplate(nn.Module):
         fc_layers = nn.Sequential(*fc_layers)
         return fc_layers
 
-    @torch.no_grad()
+    # @torch.no_grad()
     def proposal_layer(self, batch_dict, nms_config):
         """
         Args:
@@ -67,7 +72,9 @@ class RoIHeadTemplate(nn.Module):
         batch_size = batch_dict['batch_size']
         batch_box_preds = batch_dict['batch_box_preds']
         batch_cls_preds = batch_dict['batch_cls_preds']
-        rois = batch_box_preds.new_zeros((batch_size, nms_config.NMS_POST_MAXSIZE, batch_box_preds.shape[-1]))
+       
+        # rois = batch_box_preds.new_zeros((batch_size, nms_config.NMS_POST_MAXSIZE, batch_box_preds.shape[-1]))
+        rois = []
         roi_scores = batch_box_preds.new_zeros((batch_size, nms_config.NMS_POST_MAXSIZE))
         roi_labels = batch_box_preds.new_zeros((batch_size, nms_config.NMS_POST_MAXSIZE), dtype=torch.long)
 
@@ -78,9 +85,11 @@ class RoIHeadTemplate(nn.Module):
             else:
                 assert batch_dict['batch_cls_preds'].shape.__len__() == 3
                 batch_mask = index
+                
             box_preds = batch_box_preds[batch_mask]
             cls_preds = batch_cls_preds[batch_mask]
 
+            
             cur_roi_scores, cur_roi_labels = torch.max(cls_preds, dim=1)
 
             if nms_config.MULTI_CLASSES_NMS:
@@ -90,11 +99,12 @@ class RoIHeadTemplate(nn.Module):
                     box_scores=cur_roi_scores, box_preds=box_preds, nms_config=nms_config
                 )
 
-            rois[index, :len(selected), :] = box_preds[selected]
+            # rois[index, :len(selected), :] = box_preds[selected]
+            rois.append(F.pad(box_preds[selected], (0, 0, 0, nms_config.NMS_POST_MAXSIZE - len(selected)), mode='constant', value=0))
             roi_scores[index, :len(selected)] = cur_roi_scores[selected]
             roi_labels[index, :len(selected)] = cur_roi_labels[selected]
 
-        batch_dict['rois'] = rois
+        batch_dict['rois'] = torch.stack(rois)
         batch_dict['roi_scores'] = roi_scores
         batch_dict['roi_labels'] = roi_labels + 1
         batch_dict['has_class_labels'] = True if batch_cls_preds.shape[-1] > 1 else False
@@ -102,6 +112,8 @@ class RoIHeadTemplate(nn.Module):
         return batch_dict
 
     def assign_targets(self, batch_dict):
+        # NOTE: 
+        # FIXME: 
         batch_size = batch_dict['batch_size']
         with torch.no_grad():
             targets_dict = self.proposal_target_layer.forward(batch_dict)
@@ -133,7 +145,10 @@ class RoIHeadTemplate(nn.Module):
         targets_dict['gt_of_rois'] = gt_of_rois
         return targets_dict
 
-    def get_box_reg_layer_loss(self, forward_ret_dict):
+    def get_box_reg_layer_loss(self, forward_ret_dict=None):
+        if forward_ret_dict is None:
+            forward_ret_dict = self.forward_ret_dict
+            
         loss_cfgs = self.model_cfg.LOSS_CONFIG
         code_size = self.box_coder.code_size
         reg_valid_mask = forward_ret_dict['reg_valid_mask'].view(-1)
@@ -197,7 +212,10 @@ class RoIHeadTemplate(nn.Module):
 
         return rcnn_loss_reg, tb_dict
 
-    def get_box_cls_layer_loss(self, forward_ret_dict):
+    def get_box_cls_layer_loss(self, forward_ret_dict=None):
+        if forward_ret_dict is None:
+            forward_ret_dict = self.forward_ret_dict
+            
         loss_cfgs = self.model_cfg.LOSS_CONFIG
         rcnn_cls = forward_ret_dict['rcnn_cls']
         rcnn_cls_labels = forward_ret_dict['rcnn_cls_labels'].view(-1)
@@ -228,6 +246,7 @@ class RoIHeadTemplate(nn.Module):
         rcnn_loss += rcnn_loss_reg
         tb_dict.update(reg_tb_dict)
         tb_dict['rcnn_loss'] = rcnn_loss.item()
+        
         return rcnn_loss, tb_dict
 
     def generate_predicted_boxes(self, batch_size, rois, cls_preds, box_preds):

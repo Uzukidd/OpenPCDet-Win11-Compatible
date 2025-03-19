@@ -95,11 +95,12 @@ class PointHeadBox(PointHeadTemplate):
 
         ret_dict = {'point_cls_preds': point_cls_preds,
                     'point_box_preds': point_box_preds}
-        if self.training:
+        if self.training or self.pseudo_training:
             targets_dict = self.assign_targets(batch_dict)
             ret_dict['point_cls_labels'] = targets_dict['point_cls_labels']
             ret_dict['point_box_labels'] = targets_dict['point_box_labels']
-
+            
+       
         if not self.training or self.predict_boxes_when_training:
             point_cls_preds, point_box_preds = self.generate_predicted_boxes(
                 points=batch_dict['point_coords'][:, 1:4],
@@ -110,6 +111,9 @@ class PointHeadBox(PointHeadTemplate):
             batch_dict['batch_index'] = batch_dict['point_coords'][:, 0]
             batch_dict['cls_preds_normalized'] = False
 
+            ret_dict['batch_cls_preds'] = point_cls_preds
+            ret_dict['batch_box_preds'] = point_box_preds
+            
         self.forward_ret_dict = ret_dict
 
         return batch_dict

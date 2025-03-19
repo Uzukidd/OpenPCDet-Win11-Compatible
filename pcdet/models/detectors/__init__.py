@@ -16,6 +16,9 @@ from .voxelnext import VoxelNeXt
 from .transfusion import TransFusion
 from .bevfusion import BevFusion
 
+import warnings
+warnings.warn("You are using a variant OpenPCDet modified by uzuki-dev, NOT AN ORIGINAL VERSION!")
+
 __all__ = {
     'Detector3DTemplate': Detector3DTemplate,
     'SECONDNet': SECONDNet,

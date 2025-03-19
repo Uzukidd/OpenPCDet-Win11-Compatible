@@ -135,7 +135,7 @@ __global__ void roipool3d_forward(int batch_size, int pts_num, int boxes_num, in
 
 
 void roipool3dLauncher(int batch_size, int pts_num, int boxes_num, int feature_in_len, int sampled_pts_num,
-                       const float *xyz, const float *boxes3d, const float *pts_feature, float *pooled_features, int *pooled_empty_flag){
+                       const float *xyz, const float *boxes3d, const float *pts_feature, float *pooled_features, int *pts_idx, int *pooled_empty_flag){
 
     // printf("batch_size=%d, pts_num=%d, boxes_num=%d\n", batch_size, pts_num, boxes_num);
     int *pts_assign = NULL;
@@ -146,8 +146,8 @@ void roipool3dLauncher(int batch_size, int pts_num, int boxes_num, int feature_i
     dim3 threads(THREADS_PER_BLOCK);
     assign_pts_to_box3d<<<blocks, threads>>>(batch_size, pts_num, boxes_num, xyz, boxes3d, pts_assign);
 
-    int *pts_idx = NULL;
-    cudaMalloc(&pts_idx, batch_size * boxes_num * sampled_pts_num * sizeof(int));  // (batch_size, M, sampled_pts_num)
+    // int *pts_idx = NULL;
+    // cudaMalloc(&pts_idx, batch_size * boxes_num * sampled_pts_num * sizeof(int));  // (batch_size, M, sampled_pts_num)
 
     dim3 blocks2(DIVUP(boxes_num, THREADS_PER_BLOCK), batch_size);  // blockIdx.x(col), blockIdx.y(row)
     get_pooled_idx<<<blocks2, threads>>>(batch_size, pts_num, boxes_num, sampled_pts_num, pts_assign, pts_idx, pooled_empty_flag);
@@ -157,7 +157,7 @@ void roipool3dLauncher(int batch_size, int pts_num, int boxes_num, int feature_i
                                                       xyz, pts_idx, pts_feature, pooled_features, pooled_empty_flag);
 
     cudaFree(pts_assign);
-    cudaFree(pts_idx);
+    // cudaFree(pts_idx);
 
 #ifdef DEBUG
     cudaDeviceSynchronize();  // for using printf in kernel function

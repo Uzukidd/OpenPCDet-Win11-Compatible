@@ -71,5 +71,8 @@ class AnchorHeadSingle(AnchorHeadTemplate):
             data_dict['batch_cls_preds'] = batch_cls_preds
             data_dict['batch_box_preds'] = batch_box_preds
             data_dict['cls_preds_normalized'] = False
+            
+            self.forward_ret_dict['batch_cls_preds'] = batch_cls_preds
+            self.forward_ret_dict['batch_box_preds'] = batch_box_preds
 
         return data_dict

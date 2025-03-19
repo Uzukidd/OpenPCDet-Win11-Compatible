@@ -5,6 +5,13 @@ class PointRCNN(Detector3DTemplate):
     def __init__(self, model_cfg, num_class, dataset):
         super().__init__(model_cfg=model_cfg, num_class=num_class, dataset=dataset)
         self.module_list = self.build_networks()
+        
+    def pseudo_train(self, mode:bool = True):
+        for cur_module in self.module_list:
+            if hasattr(cur_module, 'pseudo_train'):
+                cur_module.pseudo_train(mode=mode)
+                
+        super().pseudo_train(mode=mode)
 
     def forward(self, batch_dict):
         for cur_module in self.module_list:
@@ -16,11 +23,12 @@ class PointRCNN(Detector3DTemplate):
             ret_dict = {
                 'loss': loss
             }
+            
             return ret_dict, tb_dict, disp_dict
         else:
             pred_dicts, recall_dicts = self.post_processing(batch_dict)
             return pred_dicts, recall_dicts
-
+        
     def get_training_loss(self):
         disp_dict = {}
         loss_point, tb_dict = self.point_head.get_loss()

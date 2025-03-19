@@ -10,6 +10,7 @@ from ..backbones_2d import map_to_bev
 from ..backbones_3d import pfe, vfe
 from ..model_utils import model_nms_utils
 
+import pdb
 
 class Detector3DTemplate(nn.Module):
     def __init__(self, model_cfg, num_class, dataset):
@@ -24,6 +25,11 @@ class Detector3DTemplate(nn.Module):
             'vfe', 'backbone_3d', 'map_to_bev_module', 'pfe',
             'backbone_2d', 'dense_head',  'point_head', 'roi_head'
         ]
+        
+        self.pseudo_training = False
+        
+    def pseudo_train(self, mode:bool = True):
+        self.pseudo_training = mode
 
     @property
     def mode(self):
@@ -277,6 +283,7 @@ class Detector3DTemplate(nn.Module):
             record_dict = {
                 'pred_boxes': final_boxes,
                 'pred_scores': final_scores,
+                #'pred_logits': pred_scores,
                 'pred_labels': final_labels
             }
             pred_dicts.append(record_dict)

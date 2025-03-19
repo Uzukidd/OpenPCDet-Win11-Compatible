@@ -112,22 +112,34 @@ class PointRCNNHead(RoIHeadTemplate):
         point_features_all = torch.cat(point_features_list, dim=1)
         batch_points = point_coords.view(batch_size, -1, 3)
         batch_point_features = point_features_all.view(batch_size, -1, point_features_all.shape[-1])
+        self.batch_point_features = batch_point_features
 
-        with torch.no_grad():
-            pooled_features, pooled_empty_flag = self.roipoint_pool3d_layer(
-                batch_points, batch_point_features, rois
-            )  # pooled_features: (B, num_rois, num_sampled_points, 3 + C), pooled_empty_flag: (B, num_rois)
-
-            # canonical transformation
-            roi_center = rois[:, :, 0:3]
-            pooled_features[:, :, :, 0:3] -= roi_center.unsqueeze(dim=2)
-
-            pooled_features = pooled_features.view(-1, pooled_features.shape[-2], pooled_features.shape[-1])
-            pooled_features[:, :, 0:3] = common_utils.rotate_points_along_z(
-                pooled_features[:, :, 0:3], -rois.view(-1, rois.shape[-1])[:, 6]
-            )
-            pooled_features[pooled_empty_flag.view(-1) > 0] = 0
-        return pooled_features
+        # with torch.no_grad():
+            # torch.save(batch_points, '/home/ksas/uzuki_space/batch_points.pt')
+            # torch.save(batch_point_features, '/home/ksas/uzuki_space/batch_point_features.pt')
+            # torch.save(rois, '/home/ksas/uzuki_space/rois.pt')
+        pooled_features, pooled_empty_flag, pts_idx = self.roipoint_pool3d_layer(
+            batch_points, batch_point_features, rois
+        )  # pooled_features: (B, num_rois, num_sampled_points, 3 + C), pooled_empty_flag: (B, num_rois)
+        # with torch.no_grad():
+        # canonical transformation
+        xyz_features = pooled_features[:, :, :, 0:3]
+        merged_features = pooled_features[:, :, :, 3:]
+        
+        roi_center = rois[:, :, 0:3]
+        xyz_features = xyz_features - roi_center.unsqueeze(dim=2)
+        
+        xyz_features = xyz_features.view(-1, xyz_features.shape[-2], xyz_features.shape[-1])
+        merged_features = merged_features.view(-1, merged_features.shape[-2], merged_features.shape[-1])
+        xyz_features = common_utils.rotate_points_along_z(
+            xyz_features, -rois.view(-1, rois.shape[-1])[:, 6]
+        )
+        pooled_features = torch.cat((xyz_features, merged_features), dim=-1)
+        pooled_empty_index = torch.nonzero(pooled_empty_flag.view(-1) > 0).view(-1)
+        if pooled_empty_index.size(0) > 0:
+            pooled_features = pooled_features.index_fill(dim = 0, index = pooled_empty_index, value = 0)
+        # pooled_features[pooled_empty_flag.view(-1) > 0] = 0
+        return pooled_features, pts_idx
 
     def forward(self, batch_dict):
         """
@@ -138,14 +150,23 @@ class PointRCNNHead(RoIHeadTemplate):
 
         """
         targets_dict = self.proposal_layer(
-            batch_dict, nms_config=self.model_cfg.NMS_CONFIG['TRAIN' if self.training else 'TEST']
+            batch_dict, nms_config=self.model_cfg.NMS_CONFIG['TRAIN' if self.training or self.pseudo_training else 'TEST']
         )
-        if self.training:
+        # batch_dict['rois_preds'] = targets_dict['rois']
+        # batch_dict['roi_labels_preds'] = targets_dict['roi_labels']
+        # batch_dict['rois_preds'] = targets_dict['rois']
+
+        batch_dict['rois'] = targets_dict['rois']
+        batch_dict['roi_labels'] = targets_dict['roi_labels']
+        
+        if self.training or self.pseudo_training:
             targets_dict = self.assign_targets(batch_dict)
             batch_dict['rois'] = targets_dict['rois']
             batch_dict['roi_labels'] = targets_dict['roi_labels']
 
-        pooled_features = self.roipool3d_gpu(batch_dict)  # (total_rois, num_sampled_points, 3 + C)
+        pooled_features, pts_idx = self.roipool3d_gpu(batch_dict)  # (total_rois, num_sampled_points, 3 + C)
+        self.pooled_features = pooled_features
+        self.pooled_pts_idx = pts_idx
 
         xyz_input = pooled_features[..., 0:self.num_prefix_channels].transpose(1, 2).unsqueeze(dim=3).contiguous()
         xyz_features = self.xyz_up_layer(xyz_input)
@@ -163,6 +184,8 @@ class PointRCNNHead(RoIHeadTemplate):
         shared_features = l_features[-1]  # (total_rois, num_features, 1)
         rcnn_cls = self.cls_layers(shared_features).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, 1 or 2)
         rcnn_reg = self.reg_layers(shared_features).transpose(1, 2).contiguous().squeeze(dim=1)  # (B, C)
+        
+        # dfs_grad_fn(pooled_features.grad_fn)
 
         if not self.training:
             batch_cls_preds, batch_box_preds = self.generate_predicted_boxes(
@@ -171,6 +194,17 @@ class PointRCNNHead(RoIHeadTemplate):
             batch_dict['batch_cls_preds'] = batch_cls_preds
             batch_dict['batch_box_preds'] = batch_box_preds
             batch_dict['cls_preds_normalized'] = False
+            
+            if self.pseudo_training:
+                targets_dict['rcnn_cls'] = rcnn_cls
+                targets_dict['rcnn_reg'] = rcnn_reg
+            
+            targets_dict['batch_cls_preds'] = batch_cls_preds
+            targets_dict['batch_box_preds'] = batch_box_preds
+            
+            
+                
+            self.forward_ret_dict = targets_dict
         else:
             targets_dict['rcnn_cls'] = rcnn_cls
             targets_dict['rcnn_reg'] = rcnn_reg

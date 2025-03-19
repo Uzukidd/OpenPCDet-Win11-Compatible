@@ -696,10 +696,10 @@ def get_official_eval_result(gt_annos, dt_annos, current_classes, PR_detail_dict
                 result += print_str((f"aos  AP:{mAPaos[j, 0, i]:.2f}, "
                                      f"{mAPaos[j, 1, i]:.2f}, "
                                      f"{mAPaos[j, 2, i]:.2f}"))
-                # if i == 0:
-                   # ret_dict['%s_aos/easy' % class_to_name[curcls]] = mAPaos[j, 0, 0]
-                   # ret_dict['%s_aos/moderate' % class_to_name[curcls]] = mAPaos[j, 1, 0]
-                   # ret_dict['%s_aos/hard' % class_to_name[curcls]] = mAPaos[j, 2, 0]
+                if i == 0:
+                   ret_dict['%s_aos/easy' % class_to_name[curcls]] = mAPaos[j, 0, 0]
+                   ret_dict['%s_aos/moderate' % class_to_name[curcls]] = mAPaos[j, 1, 0]
+                   ret_dict['%s_aos/hard' % class_to_name[curcls]] = mAPaos[j, 2, 0]
 
             result += print_str(
                 (f"{class_to_name[curcls]} "
@@ -723,15 +723,15 @@ def get_official_eval_result(gt_annos, dt_annos, current_classes, PR_detail_dict
                    ret_dict['%s_aos/hard_R40' % class_to_name[curcls]] = mAPaos_R40[j, 2, 0]
 
             if i == 0:
-                # ret_dict['%s_3d/easy' % class_to_name[curcls]] = mAP3d[j, 0, 0]
-                # ret_dict['%s_3d/moderate' % class_to_name[curcls]] = mAP3d[j, 1, 0]
-                # ret_dict['%s_3d/hard' % class_to_name[curcls]] = mAP3d[j, 2, 0]
-                # ret_dict['%s_bev/easy' % class_to_name[curcls]] = mAPbev[j, 0, 0]
-                # ret_dict['%s_bev/moderate' % class_to_name[curcls]] = mAPbev[j, 1, 0]
-                # ret_dict['%s_bev/hard' % class_to_name[curcls]] = mAPbev[j, 2, 0]
-                # ret_dict['%s_image/easy' % class_to_name[curcls]] = mAPbbox[j, 0, 0]
-                # ret_dict['%s_image/moderate' % class_to_name[curcls]] = mAPbbox[j, 1, 0]
-                # ret_dict['%s_image/hard' % class_to_name[curcls]] = mAPbbox[j, 2, 0]
+                ret_dict['%s_3d/easy' % class_to_name[curcls]] = mAP3d[j, 0, 0]
+                ret_dict['%s_3d/moderate' % class_to_name[curcls]] = mAP3d[j, 1, 0]
+                ret_dict['%s_3d/hard' % class_to_name[curcls]] = mAP3d[j, 2, 0]
+                ret_dict['%s_bev/easy' % class_to_name[curcls]] = mAPbev[j, 0, 0]
+                ret_dict['%s_bev/moderate' % class_to_name[curcls]] = mAPbev[j, 1, 0]
+                ret_dict['%s_bev/hard' % class_to_name[curcls]] = mAPbev[j, 2, 0]
+                ret_dict['%s_image/easy' % class_to_name[curcls]] = mAPbbox[j, 0, 0]
+                ret_dict['%s_image/moderate' % class_to_name[curcls]] = mAPbbox[j, 1, 0]
+                ret_dict['%s_image/hard' % class_to_name[curcls]] = mAPbbox[j, 2, 0]
 
                 ret_dict['%s_3d/easy_R40' % class_to_name[curcls]] = mAP3d_R40[j, 0, 0]
                 ret_dict['%s_3d/moderate_R40' % class_to_name[curcls]] = mAP3d_R40[j, 1, 0]
