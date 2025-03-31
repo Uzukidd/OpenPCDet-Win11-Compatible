@@ -262,6 +262,7 @@ def create_custom_infos(dataset_cfg, class_names, data_path, save_path, workers=
     print('------------------------Start create groundtruth database for data augmentation------------------------')
     dataset.set_split(train_split)
     dataset.create_groundtruth_database(train_filename, split=train_split)
+    
     print('------------------------Data preparation done------------------------')
 
 

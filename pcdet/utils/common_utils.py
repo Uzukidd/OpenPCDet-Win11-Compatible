@@ -23,6 +23,12 @@ def limit_period(val, offset=0.5, period=np.pi):
     ans = val - torch.floor(val / period + offset) * period
     return ans.numpy() if is_numpy else ans
 
+def drop_info_with_min_points(info, min_points):
+    ret_info = {}
+    keep_indices = [i for i, x in enumerate(info['num_points_in_gt']) if x >= min_points]
+    for key in info.keys():
+        ret_info[key] = info[key][keep_indices]
+    return ret_info
 
 def drop_info_with_name(info, name):
     ret_info = {}
