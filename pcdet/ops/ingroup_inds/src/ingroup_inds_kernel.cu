@@ -29,15 +29,15 @@ do                                                    \
 // #define ASSERTION
 
 __global__ void ingroup_inds_kernel(
-    const long *group_inds,
-    long *out_inds,
+    const int64_t *group_inds,
+    int64_t *out_inds,
     int *ingroup_counter,
     int N
 ) {
 
   int idx = blockIdx.x * blockDim.x + threadIdx.x;
   if (idx >= N) return;
-  long this_group_id = group_inds[idx];
+  int64_t this_group_id = group_inds[idx];
 
   int cnt = atomicAdd(&ingroup_counter[this_group_id], 1);
   out_inds[idx] = cnt;
@@ -45,8 +45,8 @@ __global__ void ingroup_inds_kernel(
 
 
  void ingroup_inds_launcher(
-  const long *group_inds,
-  long *out_inds,
+  const int64_t *group_inds,
+  int64_t *out_inds,
   int N,
   int max_group_id
   ) {
