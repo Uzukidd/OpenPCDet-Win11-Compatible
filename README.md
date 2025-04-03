@@ -1,6 +1,6 @@
 # [Windows 11 Compatible]  OpenPCDet 0.6.0
 
-This is a compatible version of OpenPCDet for WIndows 11. 
+This is a compatible version of OpenPCDet for WIndows 11.
 
 ## OpenPCDet
 
@@ -21,51 +21,32 @@ Official README.md see here: [README_aux.md](README_aux.md)
 - CUDA 11.4 + Py3.8 + VS2019 + Pytorch1.10
 
   - Windows 11
-
   - NVCC 11.4
-
   - Visual Studio 2019
-
   - Cudatoolkit 11.3
-
   - Anaconda 3
-
   - Python 3.8.16
-
   - Pytorch 1.10.1
-
   - spconv-cu113 2.3.6
-
   - NVIDIA GeForce RTX 3060 Laptop GPU
-
 - CUDA 11.8 + Py3.10 + VS2022 + Pytorch2.0
 
   - Windows 11
-
   - NVCC 11.8
-
   - Visual Studio 2022
-
   - Cudatoolkit 11.8
-
   - Anaconda 3
-
   - Python 3.10.11
-
   - Pytorch 2.0.0
-
   - spconv-cu118 2.3.6
-
   - NVIDIA GeForce RTX 3060 Laptop GPU
 
 ## Changelog
 
-[2023-05-1] Mayday united together
-
-[2023-05-1] Dataset shared memory modified.
-
+[2025-04-03] Updated to the lastest version of OpenPCDet.
+[2023-05-01] Mayday united together
+[2023-05-01] Dataset shared memory modified.
 [2023-04-28] IoU3d_nms modified.
-
 [2023-04-28] Readme and dev branch initialized.
 
 ## Modification from official code
@@ -116,4 +97,3 @@ d. Run the demo
 ```shell
 python demo.py --cfg_file ./cfgs/kitti_models/pointpillar.yaml --ckpt ./easy_check/pointpillar_7728.pth --data_path  ./easy_check/000000.bin
 ```
-
